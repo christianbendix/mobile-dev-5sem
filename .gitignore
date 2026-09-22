@@ -1,0 +1,252 @@
+# =============================================================================
+# .gitignore — React Native Car Rental App (+ backend)
+# Covers: Expo & bare React Native, iOS, Android, Node backend, tooling, OS/IDE
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+node_modules/
+jspm_packages/
+bower_components/
+
+# Yarn (Berry) — keep the pieces that should be shared
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+.yarn-integrity
+
+# pnpm
+.pnpm-store/
+
+# NOTE: Commit exactly ONE lockfile (package-lock.json, yarn.lock or
+# pnpm-lock.yaml) so CI and teammates install identical versions.
+
+# -----------------------------------------------------------------------------
+# Environment variables & secrets
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.jks
+secrets.json
+google-services.json
+GoogleService-Info.plist
+
+# -----------------------------------------------------------------------------
+# Expo
+# -----------------------------------------------------------------------------
+.expo/
+.expo-shared/
+dist/
+web-build/
+expo-env.d.ts
+*.orig.*
+
+# If you use Expo Continuous Native Generation (npx expo prebuild) and do NOT
+# hand-edit native code, uncomment these two lines. Leave them commented
+# for bare React Native (react-native init / community CLI).
+# /ios
+# /android
+
+# -----------------------------------------------------------------------------
+# Metro bundler / React Native
+# -----------------------------------------------------------------------------
+.metro-health-check*
+*.jsbundle
+*.hbc
+*.bundle.map
+.react-native-cli/
+
+# -----------------------------------------------------------------------------
+# iOS / Xcode / CocoaPods
+# -----------------------------------------------------------------------------
+ios/Pods/
+ios/build/
+ios/.xcode.env.local
+**/ios/DerivedData/
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.xcuserstate
+*.dSYM.zip
+*.dSYM
+project.xcworkspace/xcuserdata/
+
+# Ruby / Bundler (used for CocoaPods)
+vendor/bundle/
+**/.bundle/
+
+# -----------------------------------------------------------------------------
+# Android / Gradle
+# -----------------------------------------------------------------------------
+.gradle/
+**/android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/app/debug/
+android/.cxx/
+android/app/.cxx/
+local.properties
+*.iml
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing keys — never commit release keystores; the RN debug keystore is fine
+*.keystore
+!debug.keystore
+
+# -----------------------------------------------------------------------------
+# Fastlane
+# -----------------------------------------------------------------------------
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+**/fastlane/README.md
+
+# -----------------------------------------------------------------------------
+# Testing & coverage
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+*.lcov
+junit.xml
+test-results/
+playwright-report/
+/reports/
+
+# Detox (E2E)
+artifacts/
+.detoxrc.local.*
+
+# Maestro (E2E)
+.maestro/output/
+
+# -----------------------------------------------------------------------------
+# TypeScript / build output
+# -----------------------------------------------------------------------------
+*.tsbuildinfo
+out/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# -----------------------------------------------------------------------------
+# Backend (Node / Express / etc.)
+# -----------------------------------------------------------------------------
+backend/dist/
+backend/build/
+server/dist/
+server/build/
+uploads/
+tmp/
+temp/
+
+# Local databases (commit migrations/seed scripts, not the DB file itself)
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Docker local overrides & volumes
+docker-compose.override.yml
+.docker-data/
+data/db/
+
+# -----------------------------------------------------------------------------
+# Logs & debug files
+# -----------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+buck-out/
+\.buckd/
+*.pid
+*.seed
+*.pid.lock
+
+# -----------------------------------------------------------------------------
+# AI tooling — local/personal state only
+# (CLAUDE.md / AGENTS.md MUST stay committed — the course requires them and
+#  their git history is graded evidence.)
+# -----------------------------------------------------------------------------
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/todos/
+.aider*
+.continue/
+.cursor/*.local.*
+!CLAUDE.md
+!AGENTS.md
+
+# -----------------------------------------------------------------------------
+# Editors & IDEs
+# -----------------------------------------------------------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+.fleet/
+
+# -----------------------------------------------------------------------------
+# OS files
+# -----------------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# -----------------------------------------------------------------------------
+# Hand-in / misc large files (keep the repo lean)
+# -----------------------------------------------------------------------------
+*.mp4
+*.mov
+*.zip
+*.tar.gz
