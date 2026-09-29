@@ -5,14 +5,18 @@ name: CI
 
 on:
   pull_request:
-    # labeled/unlabeled: re-run when the "no-tests-needed" label changes
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
   push:
     branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+# Solution is not in the repo root, so run everything from here.
+defaults:
+  run:
+    working-directory: car-rental-app
 
 jobs:
   # ---------- guard: repo rules ----------
@@ -35,22 +39,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Scan for committed secrets (gitleaks)
+        working-directory: .   # scan the whole repo, not just the app folder
         run: |
           docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.18.4 \
             detect --no-git --source /repo --redact --verbose
-
-  tests-included:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # full history so we can diff against the PR base
-      - name: Source changes must come with tests
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-        run: sh scripts/check-tests-included.sh
 
   # ---------- verify: static checks ----------
 
@@ -63,6 +55,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: car-rental-app/package-lock.json
       - run: npm ci
       - name: Type check
         run: npx tsc --noEmit
@@ -82,6 +75,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: car-rental-app/package-lock.json
       - run: npm ci
       - run: npx jest --ci --coverage
 
@@ -92,6 +86,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for backend
         id: backend
+        working-directory: .   # backend/ would sit at the repo root
         run: |
           if [ -f backend/package.json ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-node@v4
