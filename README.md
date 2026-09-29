@@ -56,7 +56,7 @@ GenAI has become a well-established tool for software development, and therefore
 
 #### Four standing rules apply whenever AI touches your project
 
-1. **Disclose in the AI dossier.**
+1. **Disclose in the AI dossier..**
    Continue the log you started in the design document's Appendix A: one entry per significant interaction (tool, mode, task, prompt or link, verification, decision), plus the **failure log**, with at least 3 entries per project documenting AI output that was wrong or off-spec and how you caught it.
 
 2. **AI code enters `main` only through a pull request** that:
