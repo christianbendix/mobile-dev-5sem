@@ -1,0 +1,109 @@
+# CI pipeline for the Car Rental App (React Native / Expo + TypeScript)
+# Guard -> verify -> tests
+
+name: CI
+
+on:
+  pull_request:
+    # labeled/unlabeled: re-run when the "no-tests-needed" label changes
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------- guard: repo rules ----------
+
+  agent-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require AGENTS.md or CLAUDE.md
+        run: |
+          if [ -f AGENTS.md ] || [ -f CLAUDE.md ]; then
+            echo "Agent rules file found."
+          else
+            echo "Missing AGENTS.md or CLAUDE.md (required by course AI policy)."
+            exit 1
+          fi
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for committed secrets (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.18.4 \
+            detect --no-git --source /repo --redact --verbose
+
+  tests-included:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so we can diff against the PR base
+      - name: Source changes must come with tests
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: sh scripts/check-tests-included.sh
+
+  # ---------- verify: static checks ----------
+
+  static-checks:
+    needs: [agent-rules, secrets]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx eslint . --max-warnings=0
+      - name: Formatting
+        run: npx prettier --check .
+
+  # ---------- tests ----------
+
+  unit-tests:
+    needs: static-checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx jest --ci --coverage
+
+  backend-tests:
+    needs: static-checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for backend
+        id: backend
+        run: |
+          if [ -f backend/package.json ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.backend.outputs.exists == 'true'
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install, lint and test backend
+        if: steps.backend.outputs.exists == 'true'
+        working-directory: backend
+        run: |
+          npm ci
+          npm run lint --if-present
+          npm test
