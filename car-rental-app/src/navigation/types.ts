@@ -21,7 +21,8 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Login: { redirectTo?: PendingRoute } | undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
-  SearchResults: { filters: CarFilters };
+  /** placeLabel is the place the user searched near, fx "Aarhus" */
+  SearchResults: { filters: CarFilters; placeLabel?: string };
   PreviewBooking: { car: Car };
   ActualBooking: { car: Car };
   BookingConfirmation: { booking: Booking };

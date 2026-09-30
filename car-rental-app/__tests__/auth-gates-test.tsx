@@ -21,6 +21,7 @@ jest.mock('../src/api', () => {
     api: {
       ...actual.api,
       cars: fixtures.fixtureCars,
+      locations: fixtures.fixtureLocations,
       bookings: fixtures.fixtureBookings,
       auth: {
         ...actual.api.auth,
@@ -65,7 +66,7 @@ describe('login screen', () => {
 
     await logIn();
 
-    expect(await screen.findByText('Find a car')).toBeTruthy();
+    expect(await screen.findByText('Search cars')).toBeTruthy();
   });
 });
 
@@ -74,7 +75,7 @@ describe('guarded tabs', () => {
     await render(<App />);
     await fireEvent.press(screen.getByText('Continue as guest'));
 
-    await waitFor(() => expect(screen.getByText('Find a car')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Search cars')).toBeTruthy());
 
     await fireEvent.press(screen.getByText('Bookings'));
     expect(await screen.findByText('Log in to see your bookings.')).toBeTruthy();
@@ -89,10 +90,10 @@ describe('booking gate', () => {
     await render(<App />);
 
     await fireEvent.press(screen.getByText('Continue as guest'));
-    await waitFor(() => expect(screen.getByText('Find a car')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Search cars')).toBeTruthy());
 
     // Home -> Preview -> Actual booking
-    await fireEvent.press(screen.getAllByText('View')[0]);
+    await fireEvent.press(await screen.findByText(FIRST_OFFER.name));
     expect(await screen.findByText(`Price: ${FIRST_OFFER.pricePerDay} kr / day`)).toBeTruthy();
     await fireEvent.press(screen.getByText('Book'));
 

@@ -9,10 +9,11 @@
 import { backendAuth } from './backend/auth';
 import { backendBookings } from './backend/bookings';
 import { backendCars } from './backend/cars';
+import { backendLocations } from './backend/locations';
 import { isReachable } from './client';
 import { DATA_SOURCE } from './config';
 import type { Api } from './contract';
-import { fixtureBookings, fixtureCars } from './fixtures';
+import { fixtureBookings, fixtureCars, fixtureLocations } from './fixtures';
 
 const useBackendData = DATA_SOURCE === 'backend';
 
@@ -22,6 +23,7 @@ export const api: Api = {
   auth: backendAuth,
   // Car and booking data follows DATA_SOURCE. See src/api/config.ts.
   cars: useBackendData ? backendCars : fixtureCars,
+  locations: useBackendData ? backendLocations : fixtureLocations,
   bookings: useBackendData ? backendBookings : fixtureBookings,
 };
 
@@ -35,8 +37,12 @@ export type {
   Car,
   CarFilters,
   CarsApi,
+  Coordinates,
+  LocationsApi,
   NewBooking,
+  RentalLocation,
 } from './contract';
 export { ApiError, type ApiErrorKind } from './errors';
 export { estimateTotal, rentalDays } from './pricing';
+export { DEFAULT_RADIUS_KM, distanceKm } from './geo';
 export { DATA_SOURCE, POCKETBASE_URL, type DataSource } from './config';

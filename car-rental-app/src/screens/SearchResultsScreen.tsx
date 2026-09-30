@@ -4,12 +4,14 @@ import { Button, FlatList, Text, TextInput, View } from 'react-native';
 
 import { Screen } from '../components/Screen';
 import type { RootStackParamList } from '../navigation/types';
-import { api, type Car, type CarFilters } from '../api';
+import { api, distanceKm, type Car, type CarFilters } from '../api';
+import { formatDistance } from '../utils/places';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SearchResults'>;
 
 export function SearchResultsScreen({ navigation, route }: Props) {
   const initialFilters = route.params.filters;
+  const placeLabel = route.params.placeLabel;
 
   const [query, setQuery] = useState(initialFilters.query ?? '');
   const [maxPrice, setMaxPrice] = useState('');
@@ -52,6 +54,9 @@ export function SearchResultsScreen({ navigation, route }: Props) {
     const parsedMaxPrice = Number.parseInt(maxPrice, 10);
     setIsLoading(true);
     setFilters({
+      // keep the "near this place" part of the search
+      near: filters.near,
+      radiusKm: filters.radiusKm,
       query,
       type: type || undefined,
       maxPricePerDay: Number.isNaN(parsedMaxPrice) ? undefined : parsedMaxPrice,
@@ -59,9 +64,16 @@ export function SearchResultsScreen({ navigation, route }: Props) {
     setSearchId((id) => id + 1);
   }
 
+  const near = filters.near;
+
   return (
     <Screen>
       <Text>Search</Text>
+      {placeLabel && near ? (
+        <Text>
+          Cars within {filters.radiusKm} km of {placeLabel}
+        </Text>
+      ) : null}
       <TextInput
         value={query}
         onChangeText={setQuery}
@@ -101,6 +113,11 @@ export function SearchResultsScreen({ navigation, route }: Props) {
             <Text>
               {item.type} · {item.pricePerDay} kr / day
             </Text>
+            {near && item.coordinates ? (
+              <Text>
+                {item.location} · {formatDistance(distanceKm(near, item.coordinates))} away
+              </Text>
+            ) : null}
             <Button
               title="Select"
               onPress={() => navigation.navigate('PreviewBooking', { car: item })}
