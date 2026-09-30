@@ -5,10 +5,11 @@
  *
  * Bookings created here live for the session only.
  */
-import type { Booking, BookingsApi, Car, CarFilters, CarsApi } from '../contract';
+import type { Booking, BookingsApi, Car, CarFilters, CarsApi, LocationsApi } from '../contract';
 import { ApiError } from '../errors';
+import { DEFAULT_RADIUS_KM, distanceKm } from '../geo';
 import { rentalDays } from '../pricing';
-import { FIXTURE_CARS } from './data';
+import { FIXTURE_CARS, FIXTURE_LOCATIONS } from './data';
 
 function matches(car: Car, filters: CarFilters): boolean {
   const query = filters.query?.trim().toLowerCase();
@@ -21,6 +22,11 @@ function matches(car: Car, filters: CarFilters): boolean {
   }
   const type = filters.type?.trim().toLowerCase();
   if (type && !car.type.toLowerCase().includes(type)) return false;
+  if (filters.near) {
+    if (!car.coordinates) return false;
+    const radius = filters.radiusKm ?? DEFAULT_RADIUS_KM;
+    if (distanceKm(car.coordinates, filters.near) >= radius) return false;
+  }
 
   return true;
 }
@@ -37,6 +43,12 @@ export const fixtureCars: CarsApi = {
 
   async search(filters) {
     return byPrice(FIXTURE_CARS.filter((car) => matches(car, filters)));
+  },
+};
+
+export const fixtureLocations: LocationsApi = {
+  async list() {
+    return [...FIXTURE_LOCATIONS];
   },
 };
 

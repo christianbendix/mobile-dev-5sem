@@ -4,6 +4,8 @@
  * types only — never on PocketBase records or the pocketbase SDK.
  */
 
+export type Coordinates = { lat: number; lon: number };
+
 export type Car = {
   id: string;
   name: string;
@@ -11,6 +13,16 @@ export type Car = {
   type: string;
   pricePerDay: number;
   location: string;
+  /** where the car is picked up; missing when the location is not viewable */
+  coordinates?: Coordinates;
+};
+
+/** A place where cars can be picked up (a row in `locations`). */
+export type RentalLocation = {
+  id: string;
+  name: string;
+  city: string;
+  coordinates: Coordinates;
 };
 
 export type BookingStatus = 'active' | 'completed';
@@ -38,6 +50,10 @@ export type CarFilters = {
   query?: string;
   maxPricePerDay?: number;
   type?: string;
+  /** only cars picked up within `radiusKm` of this point */
+  near?: Coordinates;
+  /** defaults to DEFAULT_RADIUS_KM when `near` is set */
+  radiusKm?: number;
 };
 
 export type NewBooking = {
@@ -63,6 +79,11 @@ export type CarsApi = {
   search(filters: CarFilters): Promise<Car[]>;
 };
 
+export type LocationsApi = {
+  /** Every rental location, sorted by city then name. */
+  list(): Promise<RentalLocation[]>;
+};
+
 export type BookingsApi = {
   listForUser(userId: string): Promise<Booking[]>;
   /** Resolves pricing itself, so callers pass only what the user chose. */
@@ -74,5 +95,6 @@ export type Api = {
   isReachable(): Promise<boolean>;
   auth: AuthApi;
   cars: CarsApi;
+  locations: LocationsApi;
   bookings: BookingsApi;
 };

@@ -1,4 +1,4 @@
-import type { Car } from '../contract';
+import type { Car, RentalLocation } from '../contract';
 
 /** Stands in for the `listings` collection when DATA_SOURCE is 'fixtures'. */
 export const FIXTURE_CARS: Car[] = [
@@ -9,6 +9,7 @@ export const FIXTURE_CARS: Car[] = [
     type: 'Hatchback',
     pricePerDay: 320,
     location: 'Aarhus C',
+    coordinates: { lat: 56.1541, lon: 10.2069 },
   },
   {
     id: 'fixture-2',
@@ -17,6 +18,7 @@ export const FIXTURE_CARS: Car[] = [
     type: 'Electric',
     pricePerDay: 695,
     location: 'Copenhagen Airport',
+    coordinates: { lat: 55.6181, lon: 12.6561 },
   },
   {
     id: 'fixture-3',
@@ -25,6 +27,7 @@ export const FIXTURE_CARS: Car[] = [
     type: 'Micro',
     pricePerDay: 210,
     location: 'Odense',
+    coordinates: { lat: 55.4017, lon: 10.387 },
   },
   {
     id: 'fixture-4',
@@ -33,6 +36,7 @@ export const FIXTURE_CARS: Car[] = [
     type: 'SUV',
     pricePerDay: 810,
     location: 'Aalborg',
+    coordinates: { lat: 57.043, lon: 9.917 },
   },
   {
     id: 'fixture-5',
@@ -41,5 +45,100 @@ export const FIXTURE_CARS: Car[] = [
     type: 'Van',
     pricePerDay: 540,
     location: 'Aarhus N',
+    coordinates: { lat: 56.1805, lon: 10.1932 },
+  },
+];
+
+/** Mirrors the `locations` collection (ids and coordinates copied from the live instance). */
+export const FIXTURE_LOCATIONS: RentalLocation[] = [
+  {
+    id: 'a1apzlmn712bcxe',
+    name: 'Aalborg Airport',
+    city: 'Aalborg',
+    coordinates: { lat: 57.0928, lon: 9.8492 },
+  },
+  {
+    id: 'gmfzqyo2im7zyus',
+    name: 'Aalborg Station',
+    city: 'Aalborg',
+    coordinates: { lat: 57.043, lon: 9.917 },
+  },
+  {
+    id: 'twp4esi7akxqsw2',
+    name: 'Aarhus Central Station',
+    city: 'Aarhus C',
+    coordinates: { lat: 56.1502, lon: 10.2045 },
+  },
+  {
+    id: '8giey54ig02duts',
+    name: 'Aarhus City Centre',
+    city: 'Aarhus C',
+    coordinates: { lat: 56.1541, lon: 10.2069 },
+  },
+  {
+    id: '0xrzd30sl03ip99',
+    name: 'Billund Airport',
+    city: 'Billund',
+    coordinates: { lat: 55.7403, lon: 9.1518 },
+  },
+  {
+    id: 'cmcd6zzg83meku0',
+    name: 'Esbjerg Station',
+    city: 'Esbjerg',
+    coordinates: { lat: 55.466, lon: 8.451 },
+  },
+  {
+    id: '796yhs32t8xjlv1',
+    name: 'Frederiksberg',
+    city: 'Frederiksberg',
+    coordinates: { lat: 55.6812, lon: 12.5328 },
+  },
+  {
+    id: 'syu72ga9o8vned1',
+    name: 'Copenhagen Airport',
+    city: 'Kastrup',
+    coordinates: { lat: 55.6181, lon: 12.6561 },
+  },
+  {
+    id: 'caqis0duugcrtys',
+    name: 'Aarhus Airport',
+    city: 'Kolind',
+    coordinates: { lat: 56.3, lon: 10.619 },
+  },
+  {
+    id: 'r61hiua1wxyefyd',
+    name: 'Copenhagen City Centre',
+    city: 'København K',
+    coordinates: { lat: 55.6805, lon: 12.5857 },
+  },
+  {
+    id: 'cch1h8scdwvqave',
+    name: 'Copenhagen Central Station',
+    city: 'København V',
+    coordinates: { lat: 55.6727, lon: 12.5646 },
+  },
+  {
+    id: 'ggaw6w4x4hfiuzy',
+    name: 'Odense City Centre',
+    city: 'Odense C',
+    coordinates: { lat: 55.3955, lon: 10.383 },
+  },
+  {
+    id: 'ljygved0i8vnmvr',
+    name: 'Odense Station',
+    city: 'Odense C',
+    coordinates: { lat: 55.4017, lon: 10.387 },
+  },
+  {
+    id: '6z73vlgf53wrn2y',
+    name: 'Roskilde Station',
+    city: 'Roskilde',
+    coordinates: { lat: 55.639, lon: 12.089 },
+  },
+  {
+    id: '8ix4ynpb6g9d8m4',
+    name: 'Vejle Station',
+    city: 'Vejle',
+    coordinates: { lat: 55.707, lon: 9.536 },
   },
 ];

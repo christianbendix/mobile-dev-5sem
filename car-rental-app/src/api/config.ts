@@ -17,5 +17,7 @@ export const COLLECTIONS = {
   users: 'users',
   /** a vehicle offered by a brand at a location — what the app calls a Car */
   listings: 'listings',
+  /** rental locations, each with a `geo_point` */
+  locations: 'locations',
   bookings: 'bookings',
 } as const;

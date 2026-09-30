@@ -6,7 +6,7 @@
  * and a booking points at a listing. Nothing outside this file assumes a field
  * name.
  */
-import type { Booking, BookingStatus, Car } from '../contract';
+import type { Booking, BookingStatus, Car, Coordinates, RentalLocation } from '../contract';
 
 export const LISTING_EXPAND = 'vehicle_id,brand_id,location_id';
 export const BOOKING_EXPAND = 'listing_id.vehicle_id,listing_id.brand_id,listing_id.location_id';
@@ -32,6 +32,8 @@ export type LocationRecord = {
   id: string;
   name?: string;
   city?: string;
+  /** PocketBase GeoPoint field; {0, 0} when unset */
+  geo_point?: { lon: number; lat: number };
 };
 
 export type ListingRecord = {
@@ -72,10 +74,17 @@ function toIsoDate(value: string): string {
   return value.slice(0, 10);
 }
 
+/** An unset GeoPoint comes back as {0, 0}, which is not a real location. */
+function toCoordinates(point: LocationRecord['geo_point']): Coordinates | undefined {
+  if (!point || (point.lat === 0 && point.lon === 0)) return undefined;
+  return { lat: point.lat, lon: point.lon };
+}
+
 export function toCar(record: ListingRecord): Car {
   const vehicle = record.expand?.vehicle_id;
   const location = record.expand?.location_id;
   const name = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ');
+  const coordinates = toCoordinates(location?.geo_point);
 
   return {
     id: record.id,
@@ -84,6 +93,20 @@ export function toCar(record: ListingRecord): Car {
     type: vehicle?.category ?? '',
     pricePerDay: record.daily_price ?? 0,
     location: location?.name ?? location?.city ?? 'Unknown location',
+    ...(coordinates ? { coordinates } : {}),
+  };
+}
+
+/** Locations without coordinates cannot be searched by distance, so they are dropped. */
+export function toRentalLocation(record: LocationRecord): RentalLocation | null {
+  const coordinates = toCoordinates(record.geo_point);
+  if (!coordinates) return null;
+
+  return {
+    id: record.id,
+    name: record.name ?? 'Unknown location',
+    city: record.city ?? '',
+    coordinates,
   };
 }
 
