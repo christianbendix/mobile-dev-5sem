@@ -1,4 +1,5 @@
 import { ApiError, rentalDays } from '../src/api';
+import { buildFilter } from '../src/api/backend/cars';
 import { toBooking, toCar, type ListingRecord } from '../src/api/backend/records';
 import { toApiError } from '../src/api/errors';
 import { fixtureBookings, fixtureCars } from '../src/api/fixtures';
@@ -71,6 +72,39 @@ describe('fixture cars', () => {
     await expect(fixtureCars.search({ driverAge: 24 })).resolves.toHaveLength(FIXTURE_CARS.length);
   });
 
+  it('filters on several brands, vendors and car types at once', async () => {
+    const names = async (filters: Parameters<typeof fixtureCars.search>[0]) =>
+      (await fixtureCars.search(filters)).map((car) => car.name).sort();
+
+    expect(await names({ brands: ['Toyota', 'Ford'] })).toEqual(['Ford Transit', 'Toyota Aygo']);
+    expect(await names({ vendors: ['Europcar'] })).toEqual(['Ford Transit', 'Volkswagen Golf']);
+    expect(await names({ carTypes: ['SUV', 'Luxury'] })).toEqual(['Tesla Model 3', 'Volvo XC60']);
+    // fields combine: Europcar AND manual AND at least 400 kr
+    expect(
+      await names({ vendors: ['Europcar'], transmission: 'manual', minPricePerDay: 400 }),
+    ).toEqual(['Ford Transit']);
+    // an empty list restricts nothing
+    await expect(fixtureCars.search({ brands: [] })).resolves.toHaveLength(FIXTURE_CARS.length);
+  });
+
+  it('filters on transmission and a price range', async () => {
+    const automatic = await fixtureCars.search({ transmission: 'automatic' });
+    const midRange = await fixtureCars.search({ minPricePerDay: 300, maxPricePerDay: 600 });
+
+    expect(automatic.map((car) => car.make).sort()).toEqual(['Tesla', 'Volvo']);
+    expect(midRange.map((car) => car.pricePerDay)).toEqual([320, 540]);
+  });
+
+  it('offers the filter options found in the listings', async () => {
+    await expect(fixtureCars.filterOptions()).resolves.toEqual({
+      brands: ['Ford', 'Tesla', 'Toyota', 'Volkswagen', 'Volvo'],
+      vendors: ['Avis', 'Europcar', 'Hertz', 'Sixt'],
+      carTypes: ['Compact', 'Economy', 'Luxury', 'SUV', 'VAN'],
+      transmissions: ['automatic', 'manual'],
+      priceRange: { min: 210, max: 810 },
+    });
+  });
+
   it('returns everything for empty filters', async () => {
     await expect(fixtureCars.search({})).resolves.toHaveLength(FIXTURE_CARS.length);
   });
@@ -125,11 +159,23 @@ describe('toCar', () => {
     expect(toCar(LISTING)).toEqual({
       id: 'cpnhdgsoi1qkjw4',
       name: 'Tesla Model 3',
+      make: 'Tesla',
       vendorName: 'Hertz',
       type: 'Luxury',
       pricePerDay: 1379,
       location: 'Copenhagen Airport',
     });
+  });
+
+  it('reads the transmission from the vehicle', () => {
+    const vehicle = LISTING.expand?.vehicle_id;
+    const withGearbox = (automatic: boolean): ListingRecord => ({
+      ...LISTING,
+      expand: { ...LISTING.expand, vehicle_id: { id: 'vehicle-1', ...vehicle, automatic } },
+    });
+
+    expect(toCar(withGearbox(true)).transmission).toBe('automatic');
+    expect(toCar(withGearbox(false)).transmission).toBe('manual');
   });
 
   it("carries the provider's minimum driver age", () => {
@@ -147,6 +193,35 @@ describe('toCar', () => {
 
     expect(car.vendorName).toBe('Unknown vendor');
     expect(car.location).toBe('Unknown location');
+  });
+});
+
+describe('backend filter', () => {
+  it('ORs the values within a field and ANDs the fields', () => {
+    expect(
+      buildFilter({
+        brands: ['BMW', 'Toyota'],
+        carTypes: ['SUV'],
+        transmission: 'manual',
+        minPricePerDay: 200,
+        maxPricePerDay: 900,
+      }),
+    ).toBe(
+      '(vehicle_id.make = "BMW" || vehicle_id.make = "Toyota") && ' +
+        '(vehicle_id.category = "SUV") && ' +
+        'vehicle_id.automatic = false && ' +
+        'daily_price >= 200 && daily_price <= 900',
+    );
+  });
+
+  it('escapes the values, so a quote cannot break out of the string', () => {
+    const filter = buildFilter({ vendors: ['Hertz" || id != "'] });
+
+    expect(filter).toBe('(brand_id.name = "Hertz\\" || id != \\"")');
+  });
+
+  it('is empty when nothing is chosen', () => {
+    expect(buildFilter({ brands: [], vendors: [] })).toBe('');
   });
 });
 

@@ -375,6 +375,39 @@ describe('search from home', () => {
     expect(within(pickupBox).getByText('10:00')).toBeTruthy();
   });
 
+  it('filters the results on separate fields loaded from the api', async () => {
+    await openHomeAsGuest();
+    await fireEvent.press(screen.getByText('Search cars'));
+    await waitFor(() => expect(resultLocations()).toHaveLength(FIXTURE_CARS.length));
+
+    await fireEvent.press(screen.getByText('Show filters'));
+    // every option comes from api.cars.filterOptions
+    expect(await screen.findByLabelText('Brand: Volvo')).toBeTruthy();
+    expect(screen.getByLabelText('Vendor: Europcar')).toBeTruthy();
+    expect(screen.getByLabelText('Car type: VAN')).toBeTruthy();
+    expect(screen.getByText('Price per day (kr) · 210–810 on offer')).toBeTruthy();
+
+    // two brands, and manual only: the Aygo and the Transit
+    await fireEvent.press(screen.getByLabelText('Brand: Toyota'));
+    await fireEvent.press(screen.getByLabelText('Brand: Ford'));
+    expect(screen.getByLabelText('Brand: Toyota')).toBeChecked();
+    await fireEvent.press(screen.getByLabelText('Transmission: Manual'));
+    await fireEvent.press(screen.getByText('Apply filters'));
+
+    await waitFor(() => expect(resultLocations().sort()).toEqual(['Aarhus N', 'Odense']));
+    expect(screen.getByText('Show filters (2)')).toBeTruthy();
+
+    // add a price cap that only the Aygo (210 kr) fits
+    await fireEvent.press(screen.getByText('Show filters (2)'));
+    await fireEvent.changeText(screen.getByLabelText('Maximum price per day'), '300');
+    await fireEvent.press(screen.getByText('Apply filters'));
+    await waitFor(() => expect(resultLocations()).toEqual(['Odense']));
+
+    await fireEvent.press(screen.getByText('Show filters (3)'));
+    await fireEvent.press(screen.getByText('Clear filters'));
+    await waitFor(() => expect(resultLocations()).toHaveLength(FIXTURE_CARS.length));
+  });
+
   it('lists all cars, and says why, when the location cannot be had', async () => {
     location.requestForegroundPermissionsAsync.mockResolvedValue(permission(false));
     await openHomeAsGuest();

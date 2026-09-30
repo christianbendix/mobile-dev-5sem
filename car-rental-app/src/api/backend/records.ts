@@ -114,8 +114,12 @@ export function toCar(record: ListingRecord): Car {
   return {
     id: record.id,
     name: name || 'Unknown car',
+    make: vehicle?.make ?? '',
     vendorName: record.expand?.brand_id?.name ?? 'Unknown vendor',
     type: vehicle?.category ?? '',
+    ...(vehicle?.automatic !== undefined
+      ? { transmission: vehicle.automatic ? 'automatic' : 'manual' }
+      : {}),
     pricePerDay: record.daily_price ?? 0,
     location: location?.name ?? location?.city ?? 'Unknown location',
     ...(minDriverAge ? { minDriverAge } : {}),

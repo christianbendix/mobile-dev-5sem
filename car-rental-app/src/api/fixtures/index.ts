@@ -7,6 +7,7 @@
  */
 import type { Booking, BookingsApi, Car, CarFilters, CarsApi, LocationsApi } from '../contract';
 import { ApiError } from '../errors';
+import { filterOptionsFor } from '../filterOptions';
 import { distanceKm, sortByDistance } from '../geo';
 import { rentalDays } from '../pricing';
 import { FIXTURE_CARS, FIXTURE_LOCATIONS } from './data';
@@ -17,14 +18,21 @@ function matches(car: Car, filters: CarFilters): boolean {
     const haystack = `${car.name} ${car.vendorName} ${car.type}`.toLowerCase();
     if (!haystack.includes(query)) return false;
   }
+  const inList = (list: string[] | undefined, value: string) =>
+    !list?.length || list.includes(value);
+  if (!inList(filters.brands, car.make)) return false;
+  if (!inList(filters.vendors, car.vendorName)) return false;
+  if (!inList(filters.carTypes, car.type)) return false;
+  if (filters.transmission && car.transmission !== filters.transmission) return false;
+  if (filters.minPricePerDay !== undefined && car.pricePerDay < filters.minPricePerDay) {
+    return false;
+  }
   if (filters.maxPricePerDay !== undefined && car.pricePerDay > filters.maxPricePerDay) {
     return false;
   }
   if (filters.driverAge !== undefined && (car.minDriverAge ?? 0) > filters.driverAge) {
     return false;
   }
-  const type = filters.type?.trim().toLowerCase();
-  if (type && !car.type.toLowerCase().includes(type)) return false;
   if (filters.near && filters.radiusKm !== undefined) {
     if (!car.coordinates) return false;
     if (distanceKm(car.coordinates, filters.near) >= filters.radiusKm) return false;
@@ -46,6 +54,10 @@ export const fixtureCars: CarsApi = {
   async search(filters) {
     const cars = byPrice(FIXTURE_CARS.filter((car) => matches(car, filters)));
     return filters.near ? sortByDistance(cars, filters.near) : cars;
+  },
+
+  async filterOptions() {
+    return filterOptionsFor(FIXTURE_CARS);
   },
 
   async getById(id) {

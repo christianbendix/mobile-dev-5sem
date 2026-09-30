@@ -2,11 +2,20 @@ import { pb } from '../client';
 import { COLLECTIONS } from '../config';
 import type { CarFilters, CarsApi } from '../contract';
 import { toApiError } from '../errors';
+import { filterOptionsFor } from '../filterOptions';
 import { sortByDistance } from '../geo';
 import { LISTING_EXPAND, toCar, toCarDetails, type ListingRecord } from './records';
 
+/** `field = a || field = b ...` for a non-empty list, escaped by pb.filter(). */
+function anyOf(field: string, values: string[] | undefined): string | null {
+  if (!values?.length) return null;
+  const params = Object.fromEntries(values.map((value, i) => [`v${i}`, value]));
+  const clauses = values.map((_, i) => `${field} = {:v${i}}`);
+  return pb.filter(`(${clauses.join(' || ')})`, params);
+}
+
 /** pb.filter() escapes the values, so user input is safe to interpolate. */
-function buildFilter(filters: CarFilters): string {
+export function buildFilter(filters: CarFilters): string {
   const parts: string[] = [];
 
   if (filters.query?.trim()) {
@@ -17,14 +26,28 @@ function buildFilter(filters: CarFilters): string {
       ),
     );
   }
+  for (const clause of [
+    anyOf('vehicle_id.make', filters.brands),
+    anyOf('brand_id.name', filters.vendors),
+    anyOf('vehicle_id.category', filters.carTypes),
+  ]) {
+    if (clause) parts.push(clause);
+  }
+  if (filters.transmission) {
+    parts.push(
+      pb.filter('vehicle_id.automatic = {:auto}', {
+        auto: filters.transmission === 'automatic',
+      }),
+    );
+  }
+  if (filters.minPricePerDay !== undefined) {
+    parts.push(pb.filter('daily_price >= {:min}', { min: filters.minPricePerDay }));
+  }
   if (filters.maxPricePerDay !== undefined) {
     parts.push(pb.filter('daily_price <= {:max}', { max: filters.maxPricePerDay }));
   }
   if (filters.driverAge !== undefined) {
     parts.push(pb.filter('brand_id.min_driver_age <= {:age}', { age: filters.driverAge }));
-  }
-  if (filters.type?.trim()) {
-    parts.push(pb.filter('vehicle_id.category ~ {:type}', { type: filters.type.trim() }));
   }
   if (filters.near && filters.radiusKm !== undefined) {
     // geoDistance takes lon before lat, and returns km
@@ -69,6 +92,18 @@ export const backendCars: CarsApi = {
       return filters.near ? sortByDistance(cars, filters.near) : cars;
     } catch (cause) {
       throw toApiError(cause, 'Search failed.');
+    }
+  },
+
+  async filterOptions() {
+    try {
+      const records = await pb.collection(COLLECTIONS.listings).getFullList<ListingRecord>({
+        expand: LISTING_EXPAND,
+        requestKey: 'cars-filter-options',
+      });
+      return filterOptionsFor(records.map(toCar));
+    } catch (cause) {
+      throw toApiError(cause, 'Could not load the filters.');
     }
   },
 

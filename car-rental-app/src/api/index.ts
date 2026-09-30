@@ -44,10 +44,12 @@ export type {
   CarDetails,
   CarFilters,
   CarsApi,
+  FilterOptions,
   Coordinates,
   LocationsApi,
   NewBooking,
   RentalLocation,
+  Transmission,
 } from './contract';
 export { ApiError, type ApiErrorKind } from './errors';
 export { estimateTotal, rentalDays } from './pricing';

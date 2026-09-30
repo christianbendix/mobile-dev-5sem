@@ -6,11 +6,18 @@
 
 export type Coordinates = { lat: number; lon: number };
 
+export type Transmission = 'automatic' | 'manual';
+
 export type Car = {
   id: string;
   name: string;
+  /** the car brand, fx "Toyota" (the rental company is the vendor) */
+  make: string;
   vendorName: string;
+  /** the car type (category), fx "Economy" or "SUV" */
   type: string;
+  /** missing when the vehicle does not say */
+  transmission?: Transmission;
   pricePerDay: number;
   location: string;
   /** the provider's minimum driver age; missing when the provider sets none */
@@ -76,12 +83,22 @@ export type AuthUser = {
   email: string;
 };
 
-/** Criteria for a car search. Every field is optional: {} means "everything". */
+/**
+ * Criteria for a car search. Every field is optional: {} means "everything".
+ * A list matches any of its values; an empty list does not restrict.
+ */
 export type CarFilters = {
   /** free-text match against car name, vendor and type */
   query?: string;
+  /** car brands, fx ["Toyota", "BMW"] */
+  brands?: string[];
+  /** rental companies, by name */
+  vendors?: string[];
+  /** car types (categories), fx ["Economy", "SUV"] */
+  carTypes?: string[];
+  transmission?: Transmission;
+  minPricePerDay?: number;
   maxPricePerDay?: number;
-  type?: string;
   /** only cars whose provider accepts a driver of this age */
   driverAge?: number;
   /** sort results nearest-first from this point (cars without coordinates last) */
@@ -100,6 +117,16 @@ export type NewBooking = {
   phone: string;
 };
 
+/** What the search filters can offer: the values that occur in the listings. */
+export type FilterOptions = {
+  brands: string[];
+  vendors: string[];
+  carTypes: string[];
+  transmissions: Transmission[];
+  /** cheapest and dearest daily price; null when there are no listings */
+  priceRange: { min: number; max: number } | null;
+};
+
 export type AuthApi = {
   /** Throws ApiError('unauthorized') when the credentials are refused. */
   login(identity: string, password: string): Promise<AuthUser>;
@@ -111,6 +138,8 @@ export type AuthApi = {
 export type CarsApi = {
   listHighlighted(limit?: number): Promise<Car[]>;
   search(filters: CarFilters): Promise<Car[]>;
+  /** Every brand, vendor, car type, transmission and the price range on offer. */
+  filterOptions(): Promise<FilterOptions>;
   /** Throws ApiError('not-found') when the listing does not exist. */
   getById(id: string): Promise<CarDetails>;
 };
