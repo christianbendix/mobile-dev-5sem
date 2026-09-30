@@ -2,10 +2,16 @@ import { render, screen } from '@testing-library/react-native';
 
 import App from '../App';
 
+jest.mock('@react-native-community/netinfo', () => ({
+  __esModule: true,
+  default: { addEventListener: jest.fn(() => jest.fn()) },
+}));
+
 describe('App', () => {
-  it('renders the starter message', async () => {
+  it('starts on the login screen', async () => {
     await render(<App />);
 
-    expect(screen.getByText('Open up App.tsx to start working on your app!')).toBeTruthy();
+    expect(screen.getByText('Welcome')).toBeTruthy();
+    expect(screen.getByText('Continue as guest')).toBeTruthy();
   });
 });

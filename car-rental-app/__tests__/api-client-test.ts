@@ -1,4 +1,4 @@
-import { POCKETBASE_URL, checkConnection, pb } from '../src/lib/pb';
+import { isReachable, pb, POCKETBASE_URL } from '../src/api/client';
 
 // fake /api/health response
 const healthResponse = () =>
@@ -7,7 +7,7 @@ const healthResponse = () =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-describe('PocketBase connection', () => {
+describe('API client', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -16,18 +16,18 @@ describe('PocketBase connection', () => {
     expect(pb.baseURL).toBe(POCKETBASE_URL);
   });
 
-  it('reports a healthy instance as connected', async () => {
+  it('reports a healthy instance as reachable', async () => {
     const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue(healthResponse());
 
-    await expect(checkConnection()).resolves.toBe(true);
+    await expect(isReachable()).resolves.toBe(true);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0][0])).toBe(`${POCKETBASE_URL}/api/health`);
   });
 
-  it('reports an unreachable instance as not connected', async () => {
+  it('reports an unreachable instance as not reachable', async () => {
     jest.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network request failed'));
 
-    await expect(checkConnection()).resolves.toBe(false);
+    await expect(isReachable()).resolves.toBe(false);
   });
 });
