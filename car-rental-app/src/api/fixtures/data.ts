@@ -1,6 +1,6 @@
 import type { Car } from '../contract';
 
-/** Stands in for the `vehicles` collection while it is superuser-only. */
+/** Stands in for the `listings` collection when DATA_SOURCE is 'fixtures'. */
 export const FIXTURE_CARS: Car[] = [
   {
     id: 'fixture-1',

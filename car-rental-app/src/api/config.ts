@@ -6,19 +6,16 @@ export type DataSource = 'backend' | 'fixtures';
 /**
  * Which implementation of the car/booking queries the app runs against.
  *
- * `fixtures` serves in-memory placeholder data. It is the default because the
- * backend is not ready: the `vehicles`, `providers`, `locations` and `brands`
- * collections are superuser-only, and there is no bookings collection at all.
- *
- * Flip to `backend` once those rules are opened and the collection exists.
- * Authentication is unaffected either way — see src/api/index.ts.
+ * `backend` reads the live PocketBase collections. `fixtures` serves in-memory
+ * placeholder data, for demoing or developing without the server.
+ * Authentication is always real either way — see src/api/index.ts.
  */
-export const DATA_SOURCE: DataSource = 'fixtures';
+export const DATA_SOURCE: DataSource = 'backend';
 
 /** Collection names, as verified against the running instance. */
 export const COLLECTIONS = {
   users: 'users',
-  vehicles: 'vehicles',
-  // does not exist yet
+  /** a vehicle offered by a brand at a location — what the app calls a Car */
+  listings: 'listings',
   bookings: 'bookings',
 } as const;

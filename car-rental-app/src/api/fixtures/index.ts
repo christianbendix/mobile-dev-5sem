@@ -1,8 +1,7 @@
 /**
  * In-memory stand-in for the car and booking queries, satisfying the same
- * contract as src/api/backend. It exists so the screens can be built and
- * demoed while the collections are still locked down; it holds no auth, because
- * the real `users` collection already works.
+ * contract as src/api/backend, for demoing or developing without the server
+ * (DATA_SOURCE = 'fixtures'). It holds no auth: login always hits the backend.
  *
  * Bookings created here live for the session only.
  */
@@ -26,7 +25,7 @@ function matches(car: Car, filters: CarFilters): boolean {
   return true;
 }
 
-/** mirrors the backend's `sort: 'pricePerDay'`, so ordering is consistent */
+/** mirrors the backend's `sort: 'daily_price'`, so ordering is consistent */
 function byPrice(cars: Car[]): Car[] {
   return [...cars].sort((a, b) => a.pricePerDay - b.pricePerDay);
 }

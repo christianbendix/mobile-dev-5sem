@@ -1,4 +1,5 @@
 import { ApiError, rentalDays } from '../src/api';
+import { toBooking, toCar, type ListingRecord } from '../src/api/backend/records';
 import { toApiError } from '../src/api/errors';
 import { fixtureBookings, fixtureCars } from '../src/api/fixtures';
 import { FIXTURE_CARS } from '../src/api/fixtures/data';
@@ -92,5 +93,67 @@ describe('fixture bookings', () => {
         phone: '12345678',
       }),
     ).rejects.toThrow(ApiError);
+  });
+});
+
+const LISTING: ListingRecord = {
+  id: 'cpnhdgsoi1qkjw4',
+  brand_id: 'brand-1',
+  vehicle_id: 'vehicle-1',
+  location_id: 'location-1',
+  daily_price: 1379,
+  currency: 'DKK',
+  expand: {
+    vehicle_id: { id: 'vehicle-1', make: 'Tesla', model: 'Model 3', category: 'Luxury' },
+    location_id: { id: 'location-1', name: 'Copenhagen Airport', city: 'Kastrup' },
+    brand_id: { id: 'brand-1', name: 'Hertz' },
+  },
+};
+
+describe('toCar', () => {
+  it('maps a listing and its expanded relations', () => {
+    expect(toCar(LISTING)).toEqual({
+      id: 'cpnhdgsoi1qkjw4',
+      name: 'Tesla Model 3',
+      vendorName: 'Hertz',
+      type: 'Luxury',
+      pricePerDay: 1379,
+      location: 'Copenhagen Airport',
+    });
+  });
+
+  it('falls back when a relation is not viewable', () => {
+    const car = toCar({ ...LISTING, expand: { vehicle_id: LISTING.expand?.vehicle_id } });
+
+    expect(car.vendorName).toBe('Unknown vendor');
+    expect(car.location).toBe('Unknown location');
+  });
+});
+
+describe('toBooking', () => {
+  const record = {
+    id: 'booking-1',
+    user_id: 'user-1',
+    listing_id: LISTING.id,
+    start_date: '2026-10-01 00:00:00.000Z',
+    end_date: '2026-10-03 00:00:00.000Z',
+    total_price: 2758,
+    expand: { listing_id: LISTING },
+  };
+
+  it('trims PocketBase datetimes to ISO dates', () => {
+    expect(toBooking(record, new Date('2026-09-30'))).toMatchObject({
+      carId: LISTING.id,
+      carName: 'Tesla Model 3',
+      vendorName: 'Hertz',
+      startDate: '2026-10-01',
+      endDate: '2026-10-03',
+      totalPrice: 2758,
+    });
+  });
+
+  it('is active through the return date and completed after it', () => {
+    expect(toBooking(record, new Date('2026-10-03T12:00:00Z')).status).toBe('active');
+    expect(toBooking(record, new Date('2026-10-04T00:00:00Z')).status).toBe('completed');
   });
 });

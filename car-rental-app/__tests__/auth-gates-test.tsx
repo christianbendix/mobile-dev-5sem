@@ -11,13 +11,17 @@ jest.mock('@react-native-community/netinfo', () => ({
 const mockLogin = jest.fn();
 
 // Only auth is stubbed. The car and booking queries run against the real
-// fixture implementation, so these tests exercise the actual API layer.
+// fixture implementation whatever DATA_SOURCE says, so these tests exercise the
+// actual API layer without needing the server.
 jest.mock('../src/api', () => {
   const actual = jest.requireActual('../src/api');
+  const fixtures = jest.requireActual('../src/api/fixtures');
   return {
     ...actual,
     api: {
       ...actual.api,
+      cars: fixtures.fixtureCars,
+      bookings: fixtures.fixtureBookings,
       auth: {
         ...actual.api.auth,
         // read lazily: this factory runs before `mockLogin` is initialised

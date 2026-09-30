@@ -35,25 +35,29 @@ screens ──▶ api (index.ts) ──┬──▶ backend/ ──▶ client.ts
 Because the screens only ever see the `Api` interface, swapping implementations
 is a change to `index.ts` — no screen changes.
 
-## Current state of the backend
+## The backend
 
-Only authentication works. `api.auth` therefore always uses `backend/auth.ts`,
-while `api.cars` and `api.bookings` follow `DATA_SOURCE` in `config.ts`, which
-defaults to `'fixtures'`.
+`DATA_SOURCE` in `config.ts` is `'backend'`. Set it to `'fixtures'` to run the
+car and booking screens against in-memory data instead; `api.auth` always uses
+the backend.
 
-| Collection                                     | State                                                |
-| ---------------------------------------------- | ---------------------------------------------------- |
-| `users`                                        | Readable; `authWithPassword` works.                  |
-| `vehicles`, `providers`, `locations`, `brands` | Exist, but list/view rules are superuser-only (403). |
-| `bookings`                                     | Does not exist.                                      |
+A `Car` in the app is a row of `listings`: a vehicle, offered by a brand (the
+rental company), at a location, at a daily price. `backend/records.ts` is the
+only file that knows the field names.
 
-## Switching to the real backend
+| App model | Collection | Fields used                                                                             |
+| --------- | ---------- | --------------------------------------------------------------------------------------- |
+| `Car`     | `listings` | `daily_price`, expanded `vehicle_id` (make, model, category), `brand_id`, `location_id` |
+| `Booking` | `bookings` | `user_id`, `listing_id`, `start_date`, `end_date`, `total_price`                        |
 
-1. In PocketBase, open the list/view rules on `vehicles`, `providers`,
-   `locations` and `brands` (e.g. `@request.auth.id != ""`).
-2. Create a `bookings` collection with `user` (relation → users), `vehicle`
-   (relation → vehicles), `start`, `end`, `totalPrice`, `status`, `fullName`,
-   `phone`, and rules scoped to `user = @request.auth.id`.
-3. Correct `backend/records.ts` to the real field names — it is the only file
-   that assumes any.
-4. Set `DATA_SOURCE = 'backend'` in `config.ts`.
+Things the schema does not have, and how the app copes:
+
+- **Booking status**: derived. A booking is `completed` once `end_date` has
+  passed.
+- **`fullName` / `phone`**: collected by the booking form but not stored, as
+  `bookings` has no columns for them.
+- **Server-side pricing**: `total_price` is required, so the client computes it
+  from the listing's stored `daily_price`. A PocketBase hook should own this.
+
+Required API rules: `listings`, `vehicles`, `locations` and `brands` readable
+by the app, and `bookings` scoped to `user_id = @request.auth.id`.

@@ -18,10 +18,9 @@ const useBackendData = DATA_SOURCE === 'backend';
 
 export const api: Api = {
   isReachable,
-  // Auth is always real: the `users` collection is readable and login works.
+  // Auth is always real; fixtures hold no users.
   auth: backendAuth,
-  // Car and booking data follows DATA_SOURCE, because those collections are
-  // not usable yet. See src/api/config.ts.
+  // Car and booking data follows DATA_SOURCE. See src/api/config.ts.
   cars: useBackendData ? backendCars : fixtureCars,
   bookings: useBackendData ? backendBookings : fixtureBookings,
 };
