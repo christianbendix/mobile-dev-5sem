@@ -1,8 +1,10 @@
 /* ___ LocationPicker component _______________________
-    Full-screen sheet for choosing one of our rental
-    locations (from the backend). With an empty search
-    field it lists them all; typing filters the list
-    locally, fx "arhus", "kbh" or "odense st".
+    Full-screen sheet for choosing where to search
+    from: the user's current location, a Danish
+    address (autocompleted as you type - pick a street,
+    then a house number), or one of our rental
+    locations. Typing also filters the rental
+    locations locally, fx "arhus", "kbh" or "odense st".
     The parent decides what happens with the choice.
    ____________________________________________________*/
 
@@ -11,9 +13,10 @@ import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAddressSuggestions } from '../../hooks/useAddressSuggestions';
 import { useRentalLocations } from '../../hooks/useRentalLocations';
 import { colors } from '../../theme';
-import type { SelectedPlace } from '../../types/search';
+import type { SearchOrigin } from '../../types/search';
 import { matchesRentalLocation, rentalLocationToPlace } from '../../utils/places';
 import { styles } from './LocationPicker.styles';
 import { LocationRow } from './LocationRow';
@@ -21,14 +24,15 @@ import { LocationRow } from './LocationRow';
 type Props = {
   visible: boolean;
   title: string;
-  selected: SelectedPlace | null;
-  onSelect: (place: SelectedPlace) => void;
+  selected: SearchOrigin | null;
+  onSelect: (origin: SearchOrigin) => void;
   onClose: () => void;
 };
 
 export function LocationPicker({ visible, title, selected, onSelect, onClose }: Props) {
   const [query, setQuery] = useState('');
   const { locations, error, isLoading } = useRentalLocations();
+  const addresses = useAddressSuggestions(query);
 
   const places = useMemo(
     () =>
@@ -44,12 +48,12 @@ export function LocationPicker({ visible, title, selected, onSelect, onClose }: 
     onClose();
   }
 
-  function choose(place: SelectedPlace) {
+  function choose(origin: SearchOrigin) {
     setQuery('');
-    onSelect(place);
+    onSelect(origin);
   }
 
-  const nothingFound = !isLoading && !error && query.trim() !== '' && places.length === 0;
+  const selectedPlaceId = selected?.kind === 'place' ? selected.place.id : null;
 
   return (
     <Modal
@@ -78,7 +82,7 @@ export function LocationPicker({ visible, title, selected, onSelect, onClose }: 
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="City, station or airport"
+              placeholder="Address, city, station or airport"
               placeholderTextColor={colors.iconMuted}
               autoFocus
               autoCorrect={false}
@@ -98,26 +102,54 @@ export function LocationPicker({ visible, title, selected, onSelect, onClose }: 
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.list}
             ListHeaderComponent={
-              places.length > 0 ? (
-                <Text style={styles.sectionTitle}>Our rental locations</Text>
-              ) : null
+              <View>
+                <Pressable onPress={() => choose({ kind: 'current' })} accessibilityRole="button">
+                  <Text>Use my current location</Text>
+                </Pressable>
+                {addresses.suggestions.length > 0 ? <Text>Addresses</Text> : null}
+                {addresses.suggestions.map((suggestion) =>
+                  suggestion.kind === 'street' ? (
+                    // a street has no position yet: fill it in and keep typing
+                    <Pressable
+                      key={`street-${suggestion.label}`}
+                      onPress={() => setQuery(suggestion.completion)}
+                      accessibilityRole="button"
+                    >
+                      <Text>{suggestion.label} …</Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      key={suggestion.id}
+                      onPress={() =>
+                        choose({
+                          kind: 'address',
+                          label: suggestion.label,
+                          coordinates: suggestion.coordinates,
+                        })
+                      }
+                      accessibilityRole="button"
+                    >
+                      <Text>{suggestion.label}</Text>
+                    </Pressable>
+                  ),
+                )}
+                {addresses.error ? <Text>{addresses.error}</Text> : null}
+                {places.length > 0 ? (
+                  <Text style={styles.sectionTitle}>Our rental locations</Text>
+                ) : null}
+              </View>
             }
             renderItem={({ item }) => (
               <LocationRow
                 place={item}
-                selected={selected?.id === item.id}
-                onPress={() => choose(item)}
+                selected={selectedPlaceId === item.id}
+                onPress={() => choose({ kind: 'place', place: item })}
               />
             )}
             ListFooterComponent={
               <View style={styles.footer}>
                 {isLoading ? <Text style={styles.status}>Loading rental locations…</Text> : null}
                 {error ? <Text style={styles.status}>{error}</Text> : null}
-                {nothingFound ? (
-                  <Text style={styles.status}>
-                    We have no rental location matching “{query.trim()}”.
-                  </Text>
-                ) : null}
               </View>
             }
           />

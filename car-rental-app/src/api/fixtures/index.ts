@@ -7,7 +7,7 @@
  */
 import type { Booking, BookingsApi, Car, CarFilters, CarsApi, LocationsApi } from '../contract';
 import { ApiError } from '../errors';
-import { DEFAULT_RADIUS_KM, distanceKm } from '../geo';
+import { distanceKm, sortByDistance } from '../geo';
 import { rentalDays } from '../pricing';
 import { FIXTURE_CARS, FIXTURE_LOCATIONS } from './data';
 
@@ -20,12 +20,14 @@ function matches(car: Car, filters: CarFilters): boolean {
   if (filters.maxPricePerDay !== undefined && car.pricePerDay > filters.maxPricePerDay) {
     return false;
   }
+  if (filters.driverAge !== undefined && (car.minDriverAge ?? 0) > filters.driverAge) {
+    return false;
+  }
   const type = filters.type?.trim().toLowerCase();
   if (type && !car.type.toLowerCase().includes(type)) return false;
-  if (filters.near) {
+  if (filters.near && filters.radiusKm !== undefined) {
     if (!car.coordinates) return false;
-    const radius = filters.radiusKm ?? DEFAULT_RADIUS_KM;
-    if (distanceKm(car.coordinates, filters.near) >= radius) return false;
+    if (distanceKm(car.coordinates, filters.near) >= filters.radiusKm) return false;
   }
 
   return true;
@@ -42,7 +44,17 @@ export const fixtureCars: CarsApi = {
   },
 
   async search(filters) {
-    return byPrice(FIXTURE_CARS.filter((car) => matches(car, filters)));
+    const cars = byPrice(FIXTURE_CARS.filter((car) => matches(car, filters)));
+    return filters.near ? sortByDistance(cars, filters.near) : cars;
+  },
+
+  async getById(id) {
+    const car = FIXTURE_CARS.find((candidate) => candidate.id === id);
+    if (!car) {
+      throw new ApiError('not-found', 'That car no longer exists.', 404);
+    }
+    // fixtures carry no specs or uploaded files, so only the basics are filled
+    return { ...car, provider: { name: car.vendorName } };
   },
 };
 

@@ -13,8 +13,31 @@ export type Car = {
   type: string;
   pricePerDay: number;
   location: string;
+  /** the provider's minimum driver age; missing when the provider sets none */
+  minDriverAge?: number;
   /** where the car is picked up; missing when the location is not viewable */
   coordinates?: Coordinates;
+};
+
+/**
+ * Everything the details screen shows about one listing: the car itself, the
+ * vehicle's specs, the provider (rental company) and the pickup location.
+ * Image URLs are absolute and missing when no file is uploaded.
+ */
+export type CarDetails = Car & {
+  imageUrl?: string;
+  seats?: number;
+  doors?: number;
+  automatic?: boolean;
+  airconditioning?: boolean;
+  provider: {
+    name: string;
+    description?: string;
+    logoUrl?: string;
+    rating?: number;
+    minDriverAge?: number;
+  };
+  address?: string;
 };
 
 /** A place where cars can be picked up (a row in `locations`). */
@@ -24,6 +47,15 @@ export type RentalLocation = {
   city: string;
   coordinates: Coordinates;
 };
+
+/**
+ * One autocomplete suggestion for the address search. A `street` has no
+ * coordinates yet: picking it puts `completion` in the field so the user can
+ * go on to type the house number. Only an `address` can be searched from.
+ */
+export type AddressSuggestion =
+  | { kind: 'street'; label: string; completion: string }
+  | { kind: 'address'; id: string; label: string; coordinates: Coordinates };
 
 export type BookingStatus = 'active' | 'completed';
 
@@ -50,9 +82,11 @@ export type CarFilters = {
   query?: string;
   maxPricePerDay?: number;
   type?: string;
-  /** only cars picked up within `radiusKm` of this point */
+  /** only cars whose provider accepts a driver of this age */
+  driverAge?: number;
+  /** sort results nearest-first from this point (cars without coordinates last) */
   near?: Coordinates;
-  /** defaults to DEFAULT_RADIUS_KM when `near` is set */
+  /** with `near`, also drop cars further away than this; no cut-off when unset */
   radiusKm?: number;
 };
 
@@ -77,11 +111,18 @@ export type AuthApi = {
 export type CarsApi = {
   listHighlighted(limit?: number): Promise<Car[]>;
   search(filters: CarFilters): Promise<Car[]>;
+  /** Throws ApiError('not-found') when the listing does not exist. */
+  getById(id: string): Promise<CarDetails>;
 };
 
 export type LocationsApi = {
   /** Every rental location, sorted by city then name. */
   list(): Promise<RentalLocation[]>;
+};
+
+export type AddressesApi = {
+  /** Danish addresses and street names matching what the user has typed so far. */
+  suggest(text: string): Promise<AddressSuggestion[]>;
 };
 
 export type BookingsApi = {
@@ -96,5 +137,6 @@ export type Api = {
   auth: AuthApi;
   cars: CarsApi;
   locations: LocationsApi;
+  addresses: AddressesApi;
   bookings: BookingsApi;
 };

@@ -1,6 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
-import type { Booking, Car, CarFilters } from '../api';
+import type { Booking, Car } from '../api';
+import type { SearchOrigin } from '../types/search';
 
 /**
  * Where to land after a successful login. Only the booking screen needs this
@@ -21,8 +22,11 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Login: { redirectTo?: PendingRoute } | undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
-  /** placeLabel is the place the user searched near, fx "Aarhus" */
-  SearchResults: { filters: CarFilters; placeLabel?: string };
+  /**
+   * Results are sorted nearest-first from `origin`, resolved on arrival.
+   * `driverAge` is a hard filter: only providers accepting that age are listed.
+   */
+  SearchResults: { origin: SearchOrigin; driverAge?: number };
   PreviewBooking: { car: Car };
   ActualBooking: { car: Car };
   BookingConfirmation: { booking: Booking };

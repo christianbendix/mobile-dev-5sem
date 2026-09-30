@@ -2,8 +2,8 @@ import { pb } from '../client';
 import { COLLECTIONS } from '../config';
 import type { CarFilters, CarsApi } from '../contract';
 import { toApiError } from '../errors';
-import { DEFAULT_RADIUS_KM } from '../geo';
-import { LISTING_EXPAND, toCar, type ListingRecord } from './records';
+import { sortByDistance } from '../geo';
+import { LISTING_EXPAND, toCar, toCarDetails, type ListingRecord } from './records';
 
 /** pb.filter() escapes the values, so user input is safe to interpolate. */
 function buildFilter(filters: CarFilters): string {
@@ -20,10 +20,13 @@ function buildFilter(filters: CarFilters): string {
   if (filters.maxPricePerDay !== undefined) {
     parts.push(pb.filter('daily_price <= {:max}', { max: filters.maxPricePerDay }));
   }
+  if (filters.driverAge !== undefined) {
+    parts.push(pb.filter('brand_id.min_driver_age <= {:age}', { age: filters.driverAge }));
+  }
   if (filters.type?.trim()) {
     parts.push(pb.filter('vehicle_id.category ~ {:type}', { type: filters.type.trim() }));
   }
-  if (filters.near) {
+  if (filters.near && filters.radiusKm !== undefined) {
     // geoDistance takes lon before lat, and returns km
     parts.push(
       pb.filter(
@@ -31,7 +34,7 @@ function buildFilter(filters: CarFilters): string {
         {
           lon: filters.near.lon,
           lat: filters.near.lat,
-          radius: filters.radiusKm ?? DEFAULT_RADIUS_KM,
+          radius: filters.radiusKm,
         },
       ),
     );
@@ -62,9 +65,22 @@ export const backendCars: CarsApi = {
         sort: 'daily_price',
         requestKey: 'cars-search',
       });
-      return records.map(toCar);
+      const cars = records.map(toCar);
+      return filters.near ? sortByDistance(cars, filters.near) : cars;
     } catch (cause) {
       throw toApiError(cause, 'Search failed.');
+    }
+  },
+
+  async getById(id) {
+    try {
+      const record = await pb.collection(COLLECTIONS.listings).getOne<ListingRecord>(id, {
+        expand: LISTING_EXPAND,
+        requestKey: 'cars-details',
+      });
+      return toCarDetails(record, (owner, filename) => pb.files.getURL(owner, filename));
+    } catch (cause) {
+      throw toApiError(cause, 'Could not load the car.');
     }
   },
 };

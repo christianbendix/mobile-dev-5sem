@@ -12,6 +12,12 @@ export type DataSource = 'backend' | 'fixtures';
  */
 export const DATA_SOURCE: DataSource = 'backend';
 
+/**
+ * Address autocomplete: DAWA, the Danish address register's public API (no key,
+ * CORS-enabled, so it works on web too). See src/api/backend/addresses.ts.
+ */
+export const ADDRESS_AUTOCOMPLETE_URL = 'https://api.dataforsyningen.dk/autocomplete';
+
 /** Collection names, as verified against the running instance. */
 export const COLLECTIONS = {
   users: 'users',

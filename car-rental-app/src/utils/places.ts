@@ -1,20 +1,12 @@
 /* ___ Place helpers __________________________________
     Small pure functions for the location search:
-    turning a picked location into backend filters,
-    and matching typed text against our locations
+    turning a rental location into a place, and
+    matching typed text against our locations
     (so "arhus st" finds "Aarhus Central Station").
    ____________________________________________________*/
 
-import type { CarFilters, RentalLocation } from '../api';
+import type { RentalLocation } from '../api';
 import type { SelectedPlace } from '../types/search';
-
-// Cars this close to the picked location are included too, so fx
-// Copenhagen Central Station also shows the cars at City Centre next door
-export const SEARCH_RADIUS_KM = 3;
-
-export function filtersForPlace(place: SelectedPlace): CarFilters {
-  return { near: { lat: place.lat, lon: place.lon }, radiusKm: SEARCH_RADIUS_KM };
-}
 
 export function rentalLocationToPlace(location: RentalLocation): SelectedPlace {
   return {

@@ -6,6 +6,7 @@
  * Swapping the transport, or pointing a screen at a different backend, is a
  * change to this file rather than to the screens.
  */
+import { backendAddresses } from './backend/addresses';
 import { backendAuth } from './backend/auth';
 import { backendBookings } from './backend/bookings';
 import { backendCars } from './backend/cars';
@@ -25,9 +26,14 @@ export const api: Api = {
   cars: useBackendData ? backendCars : fixtureCars,
   locations: useBackendData ? backendLocations : fixtureLocations,
   bookings: useBackendData ? backendBookings : fixtureBookings,
+  // Addresses come from the Danish address register, not our backend, so
+  // there is nothing to swap for fixtures.
+  addresses: backendAddresses,
 };
 
 export type {
+  AddressesApi,
+  AddressSuggestion,
   Api,
   AuthApi,
   AuthUser,
@@ -35,6 +41,7 @@ export type {
   BookingsApi,
   BookingStatus,
   Car,
+  CarDetails,
   CarFilters,
   CarsApi,
   Coordinates,
@@ -44,5 +51,5 @@ export type {
 } from './contract';
 export { ApiError, type ApiErrorKind } from './errors';
 export { estimateTotal, rentalDays } from './pricing';
-export { DEFAULT_RADIUS_KM, distanceKm } from './geo';
+export { distanceKm, sortByDistance } from './geo';
 export { DATA_SOURCE, POCKETBASE_URL, type DataSource } from './config';

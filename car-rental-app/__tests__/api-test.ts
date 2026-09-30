@@ -61,6 +61,16 @@ describe('fixture cars', () => {
     expect(results.map((car) => car.pricePerDay)).toEqual([210, 320]);
   });
 
+  it('keeps only providers that accept the driver age', async () => {
+    // Avis takes 18+, Hertz and Sixt 21+, Europcar 24+
+    const at20 = await fixtureCars.search({ driverAge: 20 });
+    const at21 = await fixtureCars.search({ driverAge: 21 });
+
+    expect(at20.map((car) => car.vendorName)).toEqual(['Avis']);
+    expect(at21.map((car) => car.vendorName).sort()).toEqual(['Avis', 'Hertz', 'Sixt']);
+    await expect(fixtureCars.search({ driverAge: 24 })).resolves.toHaveLength(FIXTURE_CARS.length);
+  });
+
   it('returns everything for empty filters', async () => {
     await expect(fixtureCars.search({})).resolves.toHaveLength(FIXTURE_CARS.length);
   });
@@ -120,6 +130,16 @@ describe('toCar', () => {
       pricePerDay: 1379,
       location: 'Copenhagen Airport',
     });
+  });
+
+  it("carries the provider's minimum driver age", () => {
+    const withAge: ListingRecord = {
+      ...LISTING,
+      expand: { ...LISTING.expand, brand_id: { id: 'brand-1', name: 'Hertz', min_driver_age: 21 } },
+    };
+
+    expect(toCar(withAge).minDriverAge).toBe(21);
+    expect(toCar(LISTING)).not.toHaveProperty('minDriverAge');
   });
 
   it('falls back when a relation is not viewable', () => {

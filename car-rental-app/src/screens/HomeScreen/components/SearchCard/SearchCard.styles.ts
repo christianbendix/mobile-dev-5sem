@@ -42,6 +42,15 @@ export const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: spacing.lg,
   },
-  ageValue: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  ageText: { fontSize: 14, fontWeight: '600', color: colors.ink },
+  ageRowInvalid: { borderWidth: 1.5, borderColor: colors.primary },
+  ageInput: {
+    ...typography.value,
+    minWidth: 56,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
+    textAlign: 'center',
+  },
+  fieldError: { ...typography.caption, color: colors.primaryText, paddingHorizontal: spacing.lg },
 });

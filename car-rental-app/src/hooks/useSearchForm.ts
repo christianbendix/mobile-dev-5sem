@@ -1,46 +1,49 @@
 /* ___ useSearchForm hook _____________________________
     Holds the state of the search form on the home
-    screen. Pick-up and drop-off are places chosen in
-    the LocationPicker (with coordinates). `filters`
-    is what the search button sends to SearchResults:
-    "cars near the pick-up place". Dates and driver
-    age are only displayed for now.
+    screen. Pick-up defaults to the user's current
+    location; the LocationPicker can swap it for a
+    typed address or one of our rental locations.
+    `pickup` and `driverAge` are what the search
+    button sends to SearchResults - the age is a hard
+    filter on the providers, so no search runs without
+    a valid one. Dates and times can be picked but are
+    only displayed for now - a rental counts in whole
+    days whatever the times.
    ____________________________________________________*/
 
 import { useState } from 'react';
 
-import type { CarFilters } from '../api';
-import type { SelectedPlace } from '../types/search';
-import { filtersForPlace } from '../utils/places';
+import type { RentalPeriod, SearchOrigin } from '../types/search';
+import { addDays, parseDriverAge } from '../utils/searchInput';
 
-// Date `offsetDays` from today at 10:00, fx "Fri 2 Oct"
-function dayFromToday(offsetDays: number) {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
-  return {
-    day: date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
-    time: '10:00',
-  };
-}
+const DEFAULT_DRIVER_AGE = '25';
+const DEFAULT_TIME = '10:00';
 
 export function useSearchForm() {
-  const [pickupPlace, setPickupPlace] = useState<SelectedPlace | null>(null);
-  const [dropoffPlace, setDropoffPlace] = useState<SelectedPlace | null>(null);
+  const [pickup, setPickup] = useState<SearchOrigin>({ kind: 'current' });
+  const [dropoff, setDropoff] = useState<SearchOrigin | null>(null);
   const [sameLocation, setSameLocation] = useState(true);
-
-  // no place chosen yet = search everywhere
-  const filters: CarFilters = pickupPlace ? filtersForPlace(pickupPlace) : {};
+  const [period, setPeriod] = useState<RentalPeriod>(() => ({
+    pickupDate: addDays(new Date(), 1),
+    pickupTime: DEFAULT_TIME,
+    returnDate: addDays(new Date(), 4),
+    returnTime: DEFAULT_TIME,
+  }));
+  const [driverAgeText, setDriverAgeText] = useState(DEFAULT_DRIVER_AGE);
 
   return {
-    pickupPlace,
-    setPickupPlace,
-    dropoffPlace,
-    setDropoffPlace,
-    pickupDate: dayFromToday(1),
-    returnDate: dayFromToday(4),
-    driverAge: '26 – 65',
+    pickup,
+    setPickup,
+    dropoff,
+    setDropoff,
+    /** set as a whole by the calendar, which keeps the dates in order */
+    period,
+    setPeriod,
+    driverAgeText,
+    setDriverAgeText,
+    /** null while the typed age is not a valid one */
+    driverAge: parseDriverAge(driverAgeText),
     sameLocation,
     toggleSameLocation: () => setSameLocation((v) => !v),
-    filters,
   };
 }

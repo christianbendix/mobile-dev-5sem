@@ -6,13 +6,28 @@
  * and a booking points at a listing. Nothing outside this file assumes a field
  * name.
  */
-import type { Booking, BookingStatus, Car, Coordinates, RentalLocation } from '../contract';
+import type {
+  Booking,
+  BookingStatus,
+  Car,
+  CarDetails,
+  Coordinates,
+  RentalLocation,
+} from '../contract';
 
 export const LISTING_EXPAND = 'vehicle_id,brand_id,location_id';
 export const BOOKING_EXPAND = 'listing_id.vehicle_id,listing_id.brand_id,listing_id.location_id';
 
+/** The fields PocketBase needs to build a file URL for a record. */
+export type FileOwner = { id: string; collectionId?: string; collectionName?: string };
+
+/** Turns a record + stored filename into an absolute URL (pb.files.getURL). */
+export type FileUrlResolver = (record: FileOwner, filename: string) => string;
+
 export type VehicleRecord = {
   id: string;
+  collectionId?: string;
+  collectionName?: string;
   make?: string;
   model?: string;
   category?: string;
@@ -25,13 +40,22 @@ export type VehicleRecord = {
 
 export type BrandRecord = {
   id: string;
+  collectionId?: string;
+  collectionName?: string;
   name?: string;
+  description?: string;
+  logo?: string;
+  rating?: number;
+  min_driver_age?: number;
 };
 
 export type LocationRecord = {
   id: string;
   name?: string;
   city?: string;
+  address?: string;
+  postal_code?: number;
+  country?: string;
   /** PocketBase GeoPoint field; {0, 0} when unset */
   geo_point?: { lon: number; lat: number };
 };
@@ -85,6 +109,7 @@ export function toCar(record: ListingRecord): Car {
   const location = record.expand?.location_id;
   const name = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ');
   const coordinates = toCoordinates(location?.geo_point);
+  const minDriverAge = record.expand?.brand_id?.min_driver_age;
 
   return {
     id: record.id,
@@ -93,7 +118,46 @@ export function toCar(record: ListingRecord): Car {
     type: vehicle?.category ?? '',
     pricePerDay: record.daily_price ?? 0,
     location: location?.name ?? location?.city ?? 'Unknown location',
+    ...(minDriverAge ? { minDriverAge } : {}),
     ...(coordinates ? { coordinates } : {}),
+  };
+}
+
+/** An empty file field is stored as "", which has no URL. */
+function fileUrl(
+  resolve: FileUrlResolver,
+  record: FileOwner | undefined,
+  filename: string | undefined,
+): string | undefined {
+  return record && filename ? resolve(record, filename) : undefined;
+}
+
+export function toCarDetails(record: ListingRecord, resolveFile: FileUrlResolver): CarDetails {
+  const vehicle = record.expand?.vehicle_id;
+  const brand = record.expand?.brand_id;
+  const location = record.expand?.location_id;
+  const address = [
+    location?.address,
+    [location?.postal_code, location?.city].filter(Boolean).join(' '),
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  return {
+    ...toCar(record),
+    imageUrl: fileUrl(resolveFile, vehicle, vehicle?.image),
+    seats: vehicle?.seats,
+    doors: vehicle?.doors,
+    automatic: vehicle?.automatic,
+    airconditioning: vehicle?.airconditioning,
+    provider: {
+      name: brand?.name ?? 'Unknown vendor',
+      description: brand?.description || undefined,
+      logoUrl: fileUrl(resolveFile, brand, brand?.logo),
+      rating: brand?.rating,
+      minDriverAge: brand?.min_driver_age,
+    },
+    address: address || undefined,
   };
 }
 

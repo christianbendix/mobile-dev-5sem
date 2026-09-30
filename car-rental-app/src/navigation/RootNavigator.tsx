@@ -20,7 +20,11 @@ export function RootNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
-        <Stack.Screen name="PreviewBooking" component={PreviewBookingScreen} />
+        <Stack.Screen
+          name="PreviewBooking"
+          component={PreviewBookingScreen}
+          options={{ headerShown: false, presentation: 'fullScreenModal' }}
+        />
         <Stack.Screen name="ActualBooking" component={ActualBookingScreen} />
         <Stack.Screen
           name="BookingConfirmation"

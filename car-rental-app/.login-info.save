@@ -1,0 +1,19 @@
+Use attached zip:
+
+  1. Run PocketBase 0.40.4 or newer on the cloud machine.
+  2. Create any admin account there, open the admin UI, go to Settings → Backups, upload the zip and click Restore.
+  3. PocketBase restarts with your data. Their temporary admin account is replaced by the one in the backup.
+
+database superuser:
+admin@rentalapp.com
+uFIFlyjeaSEJCBbS1emV
+
+id: kyzdbfuegtwtepc
+name: Admin
+email: admin@veryimportant.com
+pass: TmUk7M6e
+
+id: ntuhgjjbmrkvncd
+name: Kim
+email: kimthegrim@outlook.com
+pass: vfexfZ3Y

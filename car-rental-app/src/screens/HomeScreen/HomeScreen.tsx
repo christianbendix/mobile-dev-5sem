@@ -18,7 +18,6 @@ import { useHighlightedCars } from '../../hooks/useHighlightedCars';
 import { useRecentSearches } from '../../hooks/useRecentSearches';
 import { useSearchForm } from '../../hooks/useSearchForm';
 import type { RootStackParamList } from '../../navigation/types';
-import { filtersForPlace } from '../../utils/places';
 import { OfferItem } from './components/OfferItem/OfferItem';
 import { RecentSearchItem } from './components/RecentSearchItem/RecentSearchItem';
 import { SearchCard } from './components/SearchCard/SearchCard';
@@ -48,12 +47,14 @@ export function HomeScreen() {
 
         <SearchCard
           form={form}
-          onSearch={() =>
+          onSearch={() => {
+            // driver age is a hard filter, so never search without a valid one
+            if (form.driverAge === null) return;
             navigation.navigate('SearchResults', {
-              filters: form.filters,
-              placeLabel: form.pickupPlace?.label,
-            })
-          }
+              origin: form.pickup,
+              driverAge: form.driverAge,
+            });
+          }}
         />
 
         {/* Cheapest offers, loaded from the backend */}
@@ -78,8 +79,9 @@ export function HomeScreen() {
               search={s}
               onPress={() =>
                 navigation.navigate('SearchResults', {
-                  filters: filtersForPlace(s.place),
-                  placeLabel: s.place.label,
+                  origin: { kind: 'place', place: s.place },
+                  // the age typed on the form still applies to a repeated search
+                  driverAge: form.driverAge ?? undefined,
                 })
               }
             />

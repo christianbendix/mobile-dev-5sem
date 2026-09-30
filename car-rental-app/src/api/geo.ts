@@ -1,8 +1,5 @@
 import type { Coordinates } from './contract';
 
-/** Radius used by a `near` search when the caller does not pass one. */
-export const DEFAULT_RADIUS_KM = 25;
-
 const EARTH_RADIUS_KM = 6371;
 
 function toRadians(degrees: number): number {
@@ -20,4 +17,17 @@ export function distanceKm(a: Coordinates, b: Coordinates): number {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRadians(a.lat)) * Math.cos(toRadians(b.lat)) * Math.sin(dLon / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Nearest first. Cars without coordinates cannot be placed, so they go last,
+ * keeping their incoming (price) order.
+ */
+export function sortByDistance<T extends { coordinates?: Coordinates }>(
+  items: T[],
+  from: Coordinates,
+): T[] {
+  const distance = (item: T) =>
+    item.coordinates ? distanceKm(from, item.coordinates) : Number.POSITIVE_INFINITY;
+  return [...items].sort((a, b) => distance(a) - distance(b));
 }
