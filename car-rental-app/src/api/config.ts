@@ -1,5 +1,5 @@
-/** Where the PocketBase instance lives. Swap when the db moves to the cloud. */
-export const POCKETBASE_URL = 'http://192.168.1.252:8090';
+/** Where the PocketBase instance lives. Swap when the db moves to the cloud. Local: 'http://192.168.1.252:8090'; */
+export const POCKETBASE_URL = 'http://79.76.47.40:8090';
 
 export type DataSource = 'backend' | 'fixtures';
 
