@@ -199,11 +199,9 @@ describe('address suggestions (DAWA)', () => {
   });
 });
 
-/** the "Location: <location>" lines on the results screen, in order */
+/** the location on each result card, in order */
 function resultLocations() {
-  return screen
-    .getAllByText(/^Location: /)
-    .map((node) => [node.props.children].flat().join('').replace('Location: ', ''));
+  return screen.queryAllByTestId('car-location').map((node) => node.props.children);
 }
 
 async function openHomeAsGuest() {
@@ -223,10 +221,8 @@ describe('search from home', () => {
     await waitFor(() => expect(resultLocations()[0]).toBe('Aarhus C'));
     expect(resultLocations()).toHaveLength(FIXTURE_CARS.length);
     // every listing says how far it is from the selected location
-    expect(screen.getAllByText(/ km from your current location$/)).toHaveLength(
-      FIXTURE_CARS.length,
-    );
-    expect(screen.getByText('0.0 km from your current location')).toBeTruthy();
+    expect(screen.getAllByText(/ km away$/)).toHaveLength(FIXTURE_CARS.length);
+    expect(screen.getByText('0.0 km away')).toBeTruthy();
   });
 
   it('autocompletes an address, street first, then searches nearest to it', async () => {
@@ -260,11 +256,21 @@ describe('search from home', () => {
 
     expect(await screen.findByText('Closest to Boulevarden 1, 9000 Aalborg')).toBeTruthy();
     await waitFor(() => expect(resultLocations()[0]).toBe('Aalborg'));
-    expect(screen.getAllByText(/ km from Boulevarden 1, 9000 Aalborg$/)).toHaveLength(
-      FIXTURE_CARS.length,
-    );
+    expect(screen.getAllByText(/ km away$/)).toHaveLength(FIXTURE_CARS.length);
     // an address is already located, so the device location is never asked for
     expect(location.requestForegroundPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  it('keeps the tab bar on the results, and the Booking tab goes back to the search', async () => {
+    await openHomeAsGuest();
+    await fireEvent.press(screen.getByText('Search cars'));
+    await waitFor(() => expect(resultLocations()).toHaveLength(FIXTURE_CARS.length));
+
+    expect(screen.getByText('My Rentals')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Booking'));
+
+    await waitFor(() => expect(resultLocations()).toHaveLength(0));
+    expect(screen.getByText('Search cars')).toBeTruthy();
   });
 
   it('only lists providers that accept the driver age', async () => {
@@ -276,7 +282,7 @@ describe('search from home', () => {
 
     expect(await screen.findByText('Providers accepting a driver aged 20')).toBeTruthy();
     await waitFor(() => expect(resultLocations()).toEqual(['Aalborg']));
-    expect(screen.getByText('Min. driver age: 18')).toBeTruthy();
+    expect(screen.getByText('Driver 18+')).toBeTruthy();
   });
 
   it('will not search with an invalid driver age', async () => {
@@ -380,12 +386,13 @@ describe('search from home', () => {
     await fireEvent.press(screen.getByText('Search cars'));
     await waitFor(() => expect(resultLocations()).toHaveLength(FIXTURE_CARS.length));
 
-    await fireEvent.press(screen.getByText('Show filters'));
+    await waitFor(() => expect(screen.getByLabelText('Filters')).toBeEnabled());
+    await fireEvent.press(screen.getByLabelText('Filters'));
     // every option comes from api.cars.filterOptions
     expect(await screen.findByLabelText('Brand: Volvo')).toBeTruthy();
-    expect(screen.getByLabelText('Vendor: Europcar')).toBeTruthy();
+    expect(screen.getByLabelText('Provider: Europcar')).toBeTruthy();
     expect(screen.getByLabelText('Car type: VAN')).toBeTruthy();
-    expect(screen.getByText('Price per day (kr) · 210–810 on offer')).toBeTruthy();
+    expect(screen.getByText('210–810 kr on offer')).toBeTruthy();
 
     // two brands, and manual only: the Aygo and the Transit
     await fireEvent.press(screen.getByLabelText('Brand: Toyota'));
@@ -395,16 +402,16 @@ describe('search from home', () => {
     await fireEvent.press(screen.getByText('Apply filters'));
 
     await waitFor(() => expect(resultLocations().sort()).toEqual(['Aarhus N', 'Odense']));
-    expect(screen.getByText('Show filters (2)')).toBeTruthy();
+    expect(screen.getByLabelText('Filters, 2 in use')).toBeTruthy();
 
     // add a price cap that only the Aygo (210 kr) fits
-    await fireEvent.press(screen.getByText('Show filters (2)'));
+    await fireEvent.press(screen.getByLabelText('Filters, 2 in use'));
     await fireEvent.changeText(screen.getByLabelText('Maximum price per day'), '300');
     await fireEvent.press(screen.getByText('Apply filters'));
     await waitFor(() => expect(resultLocations()).toEqual(['Odense']));
 
-    await fireEvent.press(screen.getByText('Show filters (3)'));
-    await fireEvent.press(screen.getByText('Clear filters'));
+    await fireEvent.press(screen.getByLabelText('Filters, 3 in use'));
+    await fireEvent.press(screen.getByText('Reset'));
     await waitFor(() => expect(resultLocations()).toHaveLength(FIXTURE_CARS.length));
   });
 
@@ -419,6 +426,6 @@ describe('search from home', () => {
     ).toBeTruthy();
     await waitFor(() => expect(resultLocations()).toHaveLength(FIXTURE_CARS.length));
     // no location, so no distances
-    expect(screen.queryAllByText(/ km from /)).toHaveLength(0);
+    expect(screen.queryAllByText(/ km away$/)).toHaveLength(0);
   });
 });

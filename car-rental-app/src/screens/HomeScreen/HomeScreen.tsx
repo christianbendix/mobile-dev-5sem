@@ -7,7 +7,6 @@
    ____________________________________________________*/
 
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,14 +16,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useHighlightedCars } from '../../hooks/useHighlightedCars';
 import { useRecentSearches } from '../../hooks/useRecentSearches';
 import { useSearchForm } from '../../hooks/useSearchForm';
-import type { RootStackParamList } from '../../navigation/types';
+import type { HomeStackNavigation } from '../../navigation/types';
 import { OfferItem } from './components/OfferItem/OfferItem';
 import { RecentSearchItem } from './components/RecentSearchItem/RecentSearchItem';
 import { SearchCard } from './components/SearchCard/SearchCard';
 import { styles } from './HomeScreen.styles';
 
 export function HomeScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<HomeStackNavigation<'Search'>>();
   const { user } = useAuth();
   const form = useSearchForm();
   const { recentSearches } = useRecentSearches();

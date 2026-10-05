@@ -188,6 +188,26 @@ describe('toCar', () => {
     expect(toCar(LISTING)).not.toHaveProperty('minDriverAge');
   });
 
+  it('adds the vehicle photo, provider logo and seats when given a file resolver', () => {
+    const withPhoto: ListingRecord = {
+      ...LISTING,
+      expand: {
+        ...LISTING.expand,
+        vehicle_id: { id: 'vehicle-1', make: 'Tesla', seats: 5, image: 'model3.png' },
+        brand_id: { id: 'brand-1', name: 'Hertz', logo: 'hertz.png' },
+      },
+    };
+    const resolve = (owner: { id: string }, filename: string) => `files/${owner.id}/${filename}`;
+
+    expect(toCar(withPhoto, resolve)).toMatchObject({
+      imageUrl: 'files/vehicle-1/model3.png',
+      vendorLogoUrl: 'files/brand-1/hertz.png',
+      seats: 5,
+    });
+    // inside a booking there is no resolver, so no URL
+    expect(toCar(withPhoto)).not.toHaveProperty('imageUrl');
+  });
+
   it('falls back when a relation is not viewable', () => {
     const car = toCar({ ...LISTING, expand: { vehicle_id: LISTING.expand?.vehicle_id } });
 
@@ -244,6 +264,7 @@ describe('toBooking', () => {
       startDate: '2026-10-01',
       endDate: '2026-10-03',
       totalPrice: 2758,
+      car: { id: LISTING.id, name: 'Tesla Model 3', location: 'Copenhagen Airport' },
     });
   });
 

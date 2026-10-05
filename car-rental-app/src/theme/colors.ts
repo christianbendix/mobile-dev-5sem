@@ -10,6 +10,7 @@ export const colors = {
   primaryPressed: '#DB5006',
   primaryText: '#C2410C',
   primarySoft: '#FFE3D1',
+  primaryTint: '#FFF1E8',
 
   // Text color
   ink: '#15171C',
@@ -23,4 +24,13 @@ export const colors = {
   surface: '#FFFFFF',
   border: '#E2E2DE',
   divider: '#EFEFEC',
+  // unchecked checkbox/radio outline and the sheet's drag handle
+  control: '#D6D6D2',
+  handle: '#DDDDD9',
+  // the dark upcoming-rental card
+  inkSurface: '#24262C',
+  inkBorder: '#2C2E35',
+  inkMuted: '#A6A8AD',
+  // dims the screen behind a bottom sheet
+  overlay: 'rgba(21,23,28,0.4)',
 } as const;
