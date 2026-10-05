@@ -3,9 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ActualBookingScreen } from '../screens/ActualBookingScreen';
 import { BookingConfirmationScreen } from '../screens/BookingConfirmationScreen';
-import { LoginScreen } from '../screens/LoginScreen';
-import { PreviewBookingScreen } from '../screens/PreviewBookingScreen';
-import { SearchResultsScreen } from '../screens/SearchResultsScreen';
+import { LoginScreen } from '../screens/LoginScreen/LoginScreen';
+import { PreviewBookingScreen } from '../screens/PreviewBookingScreen/PreviewBookingScreen';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 
@@ -19,7 +18,6 @@ export function RootNavigator() {
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
         <Stack.Screen
           name="PreviewBooking"
           component={PreviewBookingScreen}

@@ -104,12 +104,16 @@ function toCoordinates(point: LocationRecord['geo_point']): Coordinates | undefi
   return { lat: point.lat, lon: point.lon };
 }
 
-export function toCar(record: ListingRecord): Car {
+/** Without `resolveFile` (fx inside a booking) the car has no image URL. */
+export function toCar(record: ListingRecord, resolveFile?: FileUrlResolver): Car {
   const vehicle = record.expand?.vehicle_id;
   const location = record.expand?.location_id;
   const name = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ');
   const coordinates = toCoordinates(location?.geo_point);
   const minDriverAge = record.expand?.brand_id?.min_driver_age;
+  const imageUrl = resolveFile ? fileUrl(resolveFile, vehicle, vehicle?.image) : undefined;
+  const brand = record.expand?.brand_id;
+  const vendorLogoUrl = resolveFile ? fileUrl(resolveFile, brand, brand?.logo) : undefined;
 
   return {
     id: record.id,
@@ -124,6 +128,9 @@ export function toCar(record: ListingRecord): Car {
     location: location?.name ?? location?.city ?? 'Unknown location',
     ...(minDriverAge ? { minDriverAge } : {}),
     ...(coordinates ? { coordinates } : {}),
+    ...(imageUrl ? { imageUrl } : {}),
+    ...(vendorLogoUrl ? { vendorLogoUrl } : {}),
+    ...(vehicle?.seats ? { seats: vehicle.seats } : {}),
   };
 }
 
@@ -148,9 +155,7 @@ export function toCarDetails(record: ListingRecord, resolveFile: FileUrlResolver
     .join(', ');
 
   return {
-    ...toCar(record),
-    imageUrl: fileUrl(resolveFile, vehicle, vehicle?.image),
-    seats: vehicle?.seats,
+    ...toCar(record, resolveFile),
     doors: vehicle?.doors,
     automatic: vehicle?.automatic,
     airconditioning: vehicle?.airconditioning,
@@ -183,9 +188,13 @@ export function bookingStatus(endDate: string, today = new Date()): BookingStatu
   return endDate < today.toISOString().slice(0, 10) ? 'completed' : 'active';
 }
 
-export function toBooking(record: BookingRecord, today = new Date()): Booking {
+export function toBooking(
+  record: BookingRecord,
+  today = new Date(),
+  resolveFile?: FileUrlResolver,
+): Booking {
   const listing = record.expand?.listing_id;
-  const car = listing ? toCar(listing) : undefined;
+  const car = listing ? toCar(listing, resolveFile) : undefined;
   const endDate = toIsoDate(record.end_date);
 
   return {
@@ -197,5 +206,6 @@ export function toBooking(record: BookingRecord, today = new Date()): Booking {
     endDate,
     totalPrice: record.total_price ?? 0,
     status: bookingStatus(endDate, today),
+    ...(car ? { car } : {}),
   };
 }

@@ -24,6 +24,11 @@ export type Car = {
   minDriverAge?: number;
   /** where the car is picked up; missing when the location is not viewable */
   coordinates?: Coordinates;
+  /** absolute URL of the vehicle photo; missing when no file is uploaded */
+  imageUrl?: string;
+  /** absolute URL of the rental company's logo; missing when none is uploaded */
+  vendorLogoUrl?: string;
+  seats?: number;
 };
 
 /**
@@ -32,8 +37,6 @@ export type Car = {
  * Image URLs are absolute and missing when no file is uploaded.
  */
 export type CarDetails = Car & {
-  imageUrl?: string;
-  seats?: number;
   doors?: number;
   automatic?: boolean;
   airconditioning?: boolean;
@@ -75,6 +78,8 @@ export type Booking = {
   endDate: string;
   totalPrice: number;
   status: BookingStatus;
+  /** the booked listing, fx for its photo, pickup location or booking again; missing when not viewable */
+  car?: Car;
 };
 
 export type AuthUser = {

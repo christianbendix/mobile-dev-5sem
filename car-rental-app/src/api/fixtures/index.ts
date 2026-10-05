@@ -98,6 +98,7 @@ export const fixtureBookings: BookingsApi = {
       endDate: input.endDate,
       totalPrice: car.pricePerDay * rentalDays(input.startDate, input.endDate),
       status: 'active',
+      car,
     };
     created.push(booking);
     return booking;

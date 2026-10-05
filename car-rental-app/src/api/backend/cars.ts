@@ -4,6 +4,7 @@ import type { CarFilters, CarsApi } from '../contract';
 import { toApiError } from '../errors';
 import { filterOptionsFor } from '../filterOptions';
 import { sortByDistance } from '../geo';
+import { fileUrl } from './files';
 import { LISTING_EXPAND, toCar, toCarDetails, type ListingRecord } from './records';
 
 /** `field = a || field = b ...` for a non-empty list, escaped by pb.filter(). */
@@ -74,7 +75,7 @@ export const backendCars: CarsApi = {
         sort: 'daily_price',
         requestKey: 'cars-highlighted',
       });
-      return result.items.map(toCar);
+      return result.items.map((record) => toCar(record, fileUrl));
     } catch (cause) {
       throw toApiError(cause, 'Could not load offers.');
     }
@@ -88,7 +89,7 @@ export const backendCars: CarsApi = {
         sort: 'daily_price',
         requestKey: 'cars-search',
       });
-      const cars = records.map(toCar);
+      const cars = records.map((record) => toCar(record, fileUrl));
       return filters.near ? sortByDistance(cars, filters.near) : cars;
     } catch (cause) {
       throw toApiError(cause, 'Search failed.');
@@ -101,7 +102,7 @@ export const backendCars: CarsApi = {
         expand: LISTING_EXPAND,
         requestKey: 'cars-filter-options',
       });
-      return filterOptionsFor(records.map(toCar));
+      return filterOptionsFor(records.map((record) => toCar(record)));
     } catch (cause) {
       throw toApiError(cause, 'Could not load the filters.');
     }
@@ -113,7 +114,7 @@ export const backendCars: CarsApi = {
         expand: LISTING_EXPAND,
         requestKey: 'cars-details',
       });
-      return toCarDetails(record, (owner, filename) => pb.files.getURL(owner, filename));
+      return toCarDetails(record, fileUrl);
     } catch (cause) {
       throw toApiError(cause, 'Could not load the car.');
     }

@@ -4,7 +4,7 @@
     application.
    ____________________________________________________*/
 
-import { TextStyle } from 'react-native';
+import { Platform, TextStyle } from 'react-native';
 import { colors } from './colors';
 
 export const typography = {
@@ -21,3 +21,6 @@ export const typography = {
   caption: { fontSize: 12, color: colors.textSubtle },
   section: { fontSize: 13, fontWeight: '600', color: colors.textSubtle },
 } satisfies Record<string, TextStyle>;
+
+/** For booking references, so they read character by character. */
+export const monoFont = Platform.select({ ios: 'Menlo', default: 'monospace' });

@@ -3,6 +3,7 @@ import { COLLECTIONS } from '../config';
 import type { BookingsApi } from '../contract';
 import { ApiError, toApiError } from '../errors';
 import { rentalDays } from '../pricing';
+import { fileUrl } from './files';
 import { BOOKING_EXPAND, toBooking, type BookingRecord, type ListingRecord } from './records';
 
 export const backendBookings: BookingsApi = {
@@ -14,7 +15,7 @@ export const backendBookings: BookingsApi = {
         sort: '-start_date',
         requestKey: 'bookings-for-user',
       });
-      return records.map((record) => toBooking(record));
+      return records.map((record) => toBooking(record, new Date(), fileUrl));
     } catch (cause) {
       throw toApiError(cause, 'Could not load bookings.');
     }
@@ -46,7 +47,7 @@ export const backendBookings: BookingsApi = {
         },
         { expand: BOOKING_EXPAND },
       );
-      return toBooking(record);
+      return toBooking(record, new Date(), fileUrl);
     } catch (cause) {
       throw toApiError(cause, 'Could not create the booking.');
     }
